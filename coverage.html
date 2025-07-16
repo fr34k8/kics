@@ -143,7 +143,7 @@
 				
 				<option value="file43">github.com/Checkmarx/kics/v2/pkg/engine/mock/source.go (0.0%)</option>
 				
-				<option value="file44">github.com/Checkmarx/kics/v2/pkg/engine/provider/extract.go (79.3%)</option>
+				<option value="file44">github.com/Checkmarx/kics/v2/pkg/engine/provider/extract.go (76.3%)</option>
 				
 				<option value="file45">github.com/Checkmarx/kics/v2/pkg/engine/provider/filesystem.go (80.8%)</option>
 				
@@ -2602,13 +2602,13 @@ func (m *Metrics) Stop() <span class="cov3" title="3">{
 // the type of profile
 func getTotal(prof *profile.Profile, idx int) int64 <span class="cov2" title="2">{
         var total, diffTotal int64
-        for _, sample := range prof.Sample </span><span class="cov10" title="55">{
+        for _, sample := range prof.Sample </span><span class="cov10" title="58">{
                 var v int64
                 v = sample.Value[idx]
                 if v &lt; 0 </span><span class="cov0" title="0">{
                         v = -v
                 }</span>
-                <span class="cov10" title="55">total += v
+                <span class="cov10" title="58">total += v
                 if sample.DiffBaseSample() </span><span class="cov0" title="0">{
                         diffTotal += v
                 }</span>
@@ -2632,7 +2632,7 @@ func (m *Metrics) formatTotal(b int64, typeMap map[string]float64, defaultMetric
                 }</span>
                 <span class="cov1" title="1">return fmt.Sprintf("%.f%s", metric, defaultMetric)</span>
         }
-        <span class="cov6" title="10">for k, u := range typeMap </span><span class="cov10" title="55">{
+        <span class="cov6" title="10">for k, u := range typeMap </span><span class="cov9" title="55">{
                 if u &gt;= formatter &amp;&amp; (value/u) &gt;= 1.0 </span><span class="cov7" title="20">{
                         formatter = u
                         mesure = k
@@ -3308,7 +3308,7 @@ func Analyze(a *Analyzer) (model.AnalyzedPaths, error) <span class="cov4" title=
 
         <span class="cov4" title="29">go func() </span><span class="cov4" title="29">{
                 // close channel results when the worker has finished writing into it
-                defer func() </span><span class="cov4" title="29">{
+                defer func() </span><span class="cov4" title="28">{
                         close(unwanted)
                         close(results)
                         close(locCount)
@@ -5561,7 +5561,7 @@ func detectLastSingle(line int, dis map[int]int, idInfo map[int]interface{}, id 
         if idInfo == nil </span><span class="cov4" title="12">{
                 return true
         }</span>
-        <span class="cov3" title="6">for key, value := range dis </span><span class="cov4" title="8">{
+        <span class="cov3" title="6">for key, value := range dis </span><span class="cov4" title="9">{
                 if value == dis[line] &amp;&amp; key != line </span><span class="cov1" title="1">{
                         // check if we are only looking at original data equivalent to the vulnerability
                         if ok := idInfo[id].(map[int]int)[key]; ok != 0 </span><span class="cov1" title="1">{
@@ -5770,7 +5770,7 @@ func createVulnLines(startPos int, lines []string) *[]model.CodeLine <span class
 func SelectLineWithMinimumDistance(distances map[int]int, startingFrom int) int <span class="cov5" title="8">{
         minDistance, lineOfMinDistance := constants.MaxInteger, startingFrom
         for line, distance := range distances </span><span class="cov6" title="12">{
-                if distance &lt; minDistance || distance == minDistance &amp;&amp; line &lt; lineOfMinDistance </span><span class="cov5" title="9">{
+                if distance &lt; minDistance || distance == minDistance &amp;&amp; line &lt; lineOfMinDistance </span><span class="cov6" title="10">{
                         minDistance = distance
                         lineOfMinDistance = line
                 }</span>
@@ -6800,9 +6800,13 @@ func GetSources(source []string) (ExtractedPath, error) <span class="cov10" titl
                         <span class="cov4" title="2">log.Error().Msgf("%s", err)
                         return ExtractedPath{}, err</span>
                 }
-                <span class="cov6" title="3">tempDst, local := checkSymLink(getterDst, path)
+                <span class="cov6" title="3">tempDst, local, err := checkSymLink(getterDst, path)
+                if err != nil </span><span class="cov0" title="0">{
+                        log.Warn().Msgf("%s", err)
+                        continue</span>
+                }
 
-                extrStruct.ExtractionMap[getterDst] = model.ExtractedPathObject{
+                <span class="cov6" title="3">extrStruct.ExtractionMap[getterDst] = model.ExtractedPathObject{
                         Path:      path,
                         LocalPath: local,
                 }
@@ -6860,9 +6864,9 @@ func getPaths(g *getterStruct) (string, error) <span class="cov10" title="6">{
 }
 
 // check if the dst is a symbolic link
-func checkSymLink(getterDst, pathFile string) (string, bool) <span class="cov6" title="3">{
+func checkSymLink(getterDst, pathFile string) (getDest string, isLocal bool, err error) <span class="cov6" title="3">{
         var local bool
-        _, err := os.Stat(pathFile)
+        _, err = os.Stat(pathFile)
         if err == nil </span><span class="cov6" title="3">{ // check if file exist locally
                 local = true
         }</span>
@@ -6870,6 +6874,7 @@ func checkSymLink(getterDst, pathFile string) (string, bool) <span class="cov6" 
         <span class="cov6" title="3">info, err := os.Lstat(getterDst)
         if err != nil </span><span class="cov0" title="0">{
                 log.Error().Msgf("failed lstat for %s: %v", getterDst, err)
+                return "", false, err
         }</span>
 
         <span class="cov6" title="3">fileInfo := getFileInfo(info, getterDst, pathFile)
@@ -6878,6 +6883,7 @@ func checkSymLink(getterDst, pathFile string) (string, bool) <span class="cov6" 
                 path, err := os.Readlink(getterDst) // get location of symbolic Link
                 if err != nil </span><span class="cov0" title="0">{
                         log.Error().Msgf("failed Readlink for %s: %v", getterDst, err)
+                        return "", false, err
                 }</span>
                 <span class="cov4" title="2">getterDst = path</span> // change path to local path
         } else<span class="cov1" title="1"> if !fileInfo.IsDir() </span><span class="cov0" title="0">{ // symbolic links are not created for single files
@@ -6885,7 +6891,7 @@ func checkSymLink(getterDst, pathFile string) (string, bool) <span class="cov6" 
                         getterDst = pathFile
                 }</span>
         }
-        <span class="cov6" title="3">return getterDst, local</span>
+        <span class="cov6" title="3">return getterDst, local, nil</span>
 }
 
 func getFileInfo(info fs.FileInfo, dst, pathFile string) fs.FileInfo <span class="cov6" title="3">{
@@ -7082,12 +7088,12 @@ func (s *FileSystemSourceProvider) GetSources(ctx context.Context,
 
 func (s *FileSystemSourceProvider) walkDir(ctx context.Context, scanPath string, resolved bool,
         sink Sink, resolverSink ResolverSink, extensions model.Extensions) error <span class="cov1" title="3">{
-        return filepath.Walk(scanPath, func(path string, info os.FileInfo, err error) error </span><span class="cov9" title="31989">{
+        return filepath.Walk(scanPath, func(path string, info os.FileInfo, err error) error </span><span class="cov9" title="31993">{
                 if err != nil </span><span class="cov0" title="0">{
                         return err
                 }</span>
 
-                <span class="cov9" title="31989">if shouldSkip, skipFolder := s.checkConditions(info, extensions, path, resolved); shouldSkip </span><span class="cov9" title="31634">{
+                <span class="cov9" title="31993">if shouldSkip, skipFolder := s.checkConditions(info, extensions, path, resolved); shouldSkip </span><span class="cov9" title="31638">{
                         return skipFolder
                 }</span>
 
@@ -7159,7 +7165,7 @@ func closeFile(file *os.File, info os.FileInfo) <span class="cov6" title="354">{
 }
 
 func (s *FileSystemSourceProvider) checkConditions(info os.FileInfo, extensions model.Extensions,
-        path string, resolved bool) (bool, error) <span class="cov10" title="32008">{
+        path string, resolved bool) (bool, error) <span class="cov10" title="32012">{
         s.mu.RLock()
         defer s.mu.RUnlock()
 
@@ -7185,12 +7191,12 @@ func (s *FileSystemSourceProvider) checkConditions(info os.FileInfo, extensions 
                 <span class="cov1" title="3">return false, nil</span>
         }
 
-        <span class="cov9" title="25068">if f, ok := s.excludes[info.Name()]; ok &amp;&amp; containsFile(f, info) </span><span class="cov0" title="0">{
+        <span class="cov9" title="25072">if f, ok := s.excludes[info.Name()]; ok &amp;&amp; containsFile(f, info) </span><span class="cov0" title="0">{
                 log.Trace().Msgf("File ignored: %s", path)
                 return true, nil
         }</span>
-        <span class="cov9" title="25068">ext, _ := utils.GetExtension(path)
-        if !extensions.Include(ext) </span><span class="cov9" title="24714">{
+        <span class="cov9" title="25072">ext, _ := utils.GetExtension(path)
+        if !extensions.Include(ext) </span><span class="cov9" title="24718">{
                 log.Trace().Msgf("File ignored: %s", path)
                 return true, nil
         }</span>
@@ -20402,7 +20408,7 @@ func convertToParamVar(str string, s *BicepVisitor) string <span class="cov5" ti
                         return "variables('" + str + CloseParenthesis
                 }</span>
         }
-        <span class="cov5" title="37">for parameter := range s.paramList </span><span class="cov9" title="630">{
+        <span class="cov5" title="37">for parameter := range s.paramList </span><span class="cov9" title="647">{
                 if parameter == str </span><span class="cov4" title="22">{
                         return "parameters('" + str + CloseParenthesis
                 }</span>
