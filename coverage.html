@@ -157,7 +157,7 @@
 				
 				<option value="file50">github.com/Checkmarx/kics/v2/pkg/engine/vulnerability_builder.go (80.3%)</option>
 				
-				<option value="file51">github.com/Checkmarx/kics/v2/pkg/engine/vulnerability_builder_transition.go (100.0%)</option>
+				<option value="file51">github.com/Checkmarx/kics/v2/pkg/engine/vulnerability_builder_transition.go (80.0%)</option>
 				
 				<option value="file52">github.com/Checkmarx/kics/v2/pkg/engine/vulnerability_utils.go (72.3%)</option>
 				
@@ -2612,13 +2612,13 @@ func (m *Metrics) Stop() <span class="cov3" title="3">{
 // the type of profile
 func getTotal(prof *profile.Profile, idx int) int64 <span class="cov2" title="2">{
         var total, diffTotal int64
-        for _, sample := range prof.Sample </span><span class="cov9" title="51">{
+        for _, sample := range prof.Sample </span><span class="cov10" title="58">{
                 var v int64
                 v = sample.Value[idx]
                 if v &lt; 0 </span><span class="cov0" title="0">{
                         v = -v
                 }</span>
-                <span class="cov9" title="51">total += v
+                <span class="cov10" title="58">total += v
                 if sample.DiffBaseSample() </span><span class="cov0" title="0">{
                         diffTotal += v
                 }</span>
@@ -2642,8 +2642,8 @@ func (m *Metrics) formatTotal(b int64, typeMap map[string]float64, defaultMetric
                 }</span>
                 <span class="cov1" title="1">return fmt.Sprintf("%.f%s", metric, defaultMetric)</span>
         }
-        <span class="cov6" title="10">for k, u := range typeMap </span><span class="cov10" title="55">{
-                if u &gt;= formatter &amp;&amp; (value/u) &gt;= 1.0 </span><span class="cov8" title="24">{
+        <span class="cov6" title="10">for k, u := range typeMap </span><span class="cov9" title="55">{
+                if u &gt;= formatter &amp;&amp; (value/u) &gt;= 1.0 </span><span class="cov7" title="23">{
                         formatter = u
                         mesure = k
                 }</span>
@@ -3328,7 +3328,7 @@ func Analyze(a *Analyzer) (model.AnalyzedPaths, error) <span class="cov5" title=
 
         <span class="cov5" title="36">go func() </span><span class="cov5" title="36">{
                 // close channel results when the worker has finished writing into it
-                defer func() </span><span class="cov4" title="35">{
+                defer func() </span><span class="cov5" title="36">{
                         close(unwanted)
                         close(results)
                         close(locCount)
@@ -9065,7 +9065,7 @@ func generateSimilaritiesID(ctx *QueryContext, resolvedFile, subDocumentIdx, que
         searchKey, oldSimilarityIDLineInfo string, kicsComputeNewSimID bool, logWithFields *zerolog.Logger, tracker Tracker,
         kicsMigrationQueryInfo map[string]TransitionQueryInfo,
 ) (similarityID, oldSimilarityID *string) <span class="cov8" title="79">{
-        transitionType := checkQueryTransitionType(kicsMigrationQueryInfo, queryID)
+        transitionType := checkQueryTransitionType(kicsMigrationQueryInfo, queryID, ctx.Query.Metadata.Experimental)
         // only will generate pair of similarity IDs if the scan flag is enabled and the transition type is not YetToBeChecked
         // or if the scan flag is disabled and the transition type is NonGracefullyTransition
         if kicsComputeNewSimID &amp;&amp; transitionType != YetToBeChecked ||
@@ -9254,9 +9254,16 @@ type TransitionQueryInfo struct {
         Observation string                         `yaml:"observation"`
 }
 
-func checkQueryTransitionType(changeList map[string]TransitionQueryInfo, queryID string) VulnerabilityBuilderTransition <span class="cov10" title="85">{
-        if change, ok := changeList[queryID]; ok </span><span class="cov9" title="77">{
+func checkQueryTransitionType(
+        changeList map[string]TransitionQueryInfo,
+        queryID string,
+        isExperimental bool,
+) VulnerabilityBuilderTransition <span class="cov10" title="86">{
+        if change, ok := changeList[queryID]; ok </span><span class="cov9" title="78">{
                 return change.Transition
+        }</span>
+        <span class="cov5" title="8">if isExperimental </span><span class="cov0" title="0">{
+                return NonGracefullyTransition
         }</span>
         <span class="cov5" title="8">return YetToBeChecked</span>
 }
@@ -20768,12 +20775,12 @@ func parseFunctionCall(functionData map[string][]interface{}) string <span class
 
 // function to check if an identifier is a parameter/variable and add the required keyword if so
 func convertToParamVar(str string, s *BicepVisitor) string <span class="cov5" title="44">{
-        for variable := range s.varList </span><span class="cov7" title="209">{
+        for variable := range s.varList </span><span class="cov8" title="231">{
                 if variable == str </span><span class="cov3" title="7">{
                         return "variables('" + str + CloseParenthesis
                 }</span>
         }
-        <span class="cov5" title="37">for parameter := range s.paramList </span><span class="cov9" title="638">{
+        <span class="cov5" title="37">for parameter := range s.paramList </span><span class="cov9" title="628">{
                 if parameter == str </span><span class="cov4" title="22">{
                         return "parameters('" + str + CloseParenthesis
                 }</span>
